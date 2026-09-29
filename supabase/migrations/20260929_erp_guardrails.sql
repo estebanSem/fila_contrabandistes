@@ -30,7 +30,7 @@ CREATE OR REPLACE FUNCTION public.puede_gestionar_festero(p_id bigint) RETURNS b
 LANGUAGE sql STABLE SECURITY DEFINER SET search_path = '' AS $$
   SELECT EXISTS (
     SELECT 1 FROM public.fester f JOIN public.fester responsable ON responsable.auth_id = (SELECT auth.uid())
-    WHERE f.id_fester = p_id AND f.activo AND responsable.activo
+    WHERE f.id_fester = p_id AND responsable.activo
       AND (f.id_fester = responsable.id_fester OR f.id_fester_responsable = responsable.id_fester)
   ) OR public.es_admin_actual()
 $$;
@@ -60,7 +60,7 @@ CREATE POLICY fester_admin_insert ON public.fester FOR INSERT TO authenticated
     AND auth_id IS NULL AND es_admin = false
   ));
 CREATE POLICY fester_admin_update ON public.fester FOR UPDATE TO authenticated
-  USING (public.es_admin_actual() OR (
+  USING (public.es_admin_actual() OR (activo AND
     id_fester_responsable IN (SELECT id_fester FROM public.fester WHERE auth_id = (SELECT auth.uid()) AND activo)
     AND auth_id IS NULL AND es_admin = false
   ))
