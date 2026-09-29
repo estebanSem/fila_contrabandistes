@@ -86,6 +86,10 @@ export default function RegistroForm({ onIrALogin }) {
     setEnviando(false)
 
     setForm(initialForm)
+    if (authData.session) {
+      window.location.assign('/')
+      return
+    }
     setExito(
       authData.session
         ? '¡Cuenta creada correctamente!'
