@@ -2,61 +2,58 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../../supabaseClient.js'
 
 export default function HistorialCuotas({ idFester }) {
-  const [historial, setHistorial] = useState([])
+  const [ordenes, setOrdenes] = useState([])
+  const [pagina, setPagina] = useState(0)
+  const [hayMas, setHayMas] = useState(false)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
   useEffect(() => {
+    let vigente = true
+    async function cargar() {
+      setLoading(true)
+      setError(null)
+      const { data, error } = await supabase.from('pagos_cuotas')
+        .select('id_pago, concepto, importe_total, estado, creacion_ticket, fecha_pago')
+        .eq('id_fester', idFester).order('creacion_ticket', { ascending: false })
+        .range(pagina * 20, pagina * 20 + 20)
+      if (!vigente) return
+      if (error) { setError(error.message); setLoading(false); return }
+      const pagos = (data || []).slice(0, 20)
+      const { data: lineas, error: detalleError } = pagos.length
+        ? await supabase.from('detalle_pago')
+          .select('id_pago, id_detalle, importe_total, cuota(acto(nombre)), fester(nombre, primer_apellido)')
+          .in('id_pago', pagos.map((p) => p.id_pago))
+        : { data: [], error: null }
+      if (!vigente) return
+      if (detalleError) setError(detalleError.message)
+      else {
+        setOrdenes(pagos.map((p) => ({ ...p, lineas: lineas.filter((l) => l.id_pago === p.id_pago) })))
+        setHayMas((data || []).length > 20)
+      }
+      setLoading(false)
+    }
     cargar()
-  }, [idFester])
+    return () => { vigente = false }
+  }, [idFester, pagina])
 
-  async function cargar() {
-    setLoading(true)
-    setError(null)
-    // Protegido por la policy "fester lee detalle de sus pagos"
-    const { data, error } = await supabase
-      .from('detalle_pago')
-      .select(
-        'id_detalle, importe_total, cuota(acto(nombre)), pagos_cuotas(concepto, estado, fecha_pago, creacion_ticket)'
-      )
-      .eq('id_fester', idFester)
-      .order('id_detalle', { ascending: false })
-    if (error) setError(error.message)
-    else setHistorial(data)
-    setLoading(false)
-  }
-
-  if (loading) return <p className="texto-muted">Cargando historial…</p>
-
-  return (
-    <div className="cuotas-bloque">
-      <h3 className="cuotas-titulo">Historial de cuotas ({historial.length})</h3>
-
-      {error && <p className="error-texto">{error}</p>}
-
-      <div className="carrito-lista">
-        {historial.map((l) => (
-          <div key={l.id_detalle} className="carrito-item">
-            <div className="carrito-item-info">
-              <span className="carrito-item-acto">{l.cuota?.acto?.nombre}</span>
-              <span className="carrito-item-festero">
-                {l.pagos_cuotas?.concepto} ·{' '}
-                <span
-                  className={l.pagos_cuotas?.estado === 'PAGADO' ? 'badge-pagado' : 'badge-pendiente'}
-                >
-                  {l.pagos_cuotas?.estado}
-                </span>
-              </span>
-            </div>
-            <span className="precio">{Number(l.importe_total).toFixed(2)} €</span>
-          </div>
-        ))}
-        {historial.length === 0 && (
-          <p className="texto-muted" style={{ padding: 4 }}>
-            Todavía no tienes ninguna cuota registrada.
-          </p>
-        )}
-      </div>
+  return <div className="cuotas-bloque">
+    <h3 className="cuotas-titulo">Pagos de tu familia</h3>
+    {loading && <p>Cargando historial…</p>}
+    {error && <p className="error-texto">{error}</p>}
+    {!loading && !error && ordenes.length === 0 && <p>Todavía no tienes pagos registrados.</p>}
+    {ordenes.map((p) => <div className="cuotas-bloque" key={p.id_pago}>
+      <p><strong>{p.concepto}</strong> · <span className={p.estado === 'PAGADO' ? 'badge-pagado' : 'badge-pendiente'}>{p.estado}</span></p>
+      <p>{Number(p.importe_total).toFixed(2)} € · {new Date(p.creacion_ticket).toLocaleDateString('es-ES')}</p>
+      {p.estado === 'PENDIENTE' && <p className="texto-muted">Conserva el concepto exacto de la transferencia. La tesorería confirmará su recepción.</p>}
+      <ul>{p.lineas.map((l) => <li key={l.id_detalle}>
+        {l.fester?.nombre} {l.fester?.primer_apellido} — {l.cuota?.acto?.nombre}: {Number(l.importe_total).toFixed(2)} €
+      </li>)}</ul>
+    </div>)}
+    <div className="paginacion">
+      <button type="button" className="btn-mini" disabled={pagina === 0} onClick={() => setPagina(pagina - 1)}>Anterior</button>
+      <span>Página {pagina + 1}</span>
+      <button type="button" className="btn-mini" disabled={!hayMas} onClick={() => setPagina(pagina + 1)}>Siguiente</button>
     </div>
-  )
+  </div>
 }

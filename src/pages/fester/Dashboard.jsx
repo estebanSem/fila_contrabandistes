@@ -6,12 +6,14 @@ import CarritoResumen from '../cuotas/CarritoResumen.jsx'
 import CambiarPassword from '../login/CambiarPassword.jsx'
 import HistorialCuotas from '../cuotas/HistorialCuotas.jsx'
 import { CarritoProvider } from '../../CarritoContext.jsx'
+import CompletarPerfil from './CompletarPerfil.jsx'
 
 export default function Dashboard({ session }) {
   const [fester, setFester] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [tab, setTab] = useState('datos') // 'datos' | 'cuotas' | 'hijos' | 'historial'
+  const [revision, setRevision] = useState(0)
 
   useEffect(() => {
     async function cargarFester() {
@@ -28,7 +30,7 @@ export default function Dashboard({ session }) {
       setLoading(false)
     }
     cargarFester()
-  }, [session.user.id])
+  }, [session.user.id, revision])
 
   async function logout() {
     await supabase.auth.signOut()
@@ -131,11 +133,7 @@ export default function Dashboard({ session }) {
           </CarritoProvider>
         )}
 
-        {!loading && !fester && !error && (
-          <p className="texto-muted">
-            No se encontró una ficha de festero para tu cuenta. Contacta con la tesorería.
-          </p>
-        )}
+        {!loading && !fester && !error && <CompletarPerfil session={session} onCompleto={() => setRevision(revision + 1)} />}
       </div>
     </div>
   )

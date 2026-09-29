@@ -7,6 +7,7 @@ export default function CuotasSelector({ idFester, nombreFester }) {
   const [seleccionadas, setSeleccionadas] = useState({})
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [revision, setRevision] = useState(0)
 
   const { items, agregarItems } = useCarrito()
 
@@ -14,14 +15,12 @@ export default function CuotasSelector({ idFester, nombreFester }) {
     async function cargarCuotas() {
       setLoading(true)
       setError(null)
-      // pe_id_fester debe coincidir EXACTAMENTE con el nombre del parámetro
-      // en la función de Postgres mostrar_cuotas()
-      const { data, error } = await supabase.rpc('mostrar_cuotas', { pe_id_fester: idFester })
+      const { data, error } = await supabase.rpc('cuotas_disponibles', { p_id_fester: idFester })
       if (error) {
         setError(error.message)
       } else if ((data || []).some((c) => c.out_id_cuota == null)) {
         setError(
-          'La función mostrar_cuotas() no está devolviendo id_cuota. Revisa que tengas la versión corregida en Supabase.'
+          'La función cuotas_disponibles() no está devolviendo id_cuota.'
         )
       } else {
         setCuotas(data || [])
@@ -29,7 +28,13 @@ export default function CuotasSelector({ idFester, nombreFester }) {
       setLoading(false)
     }
     if (idFester) cargarCuotas()
-  }, [idFester])
+  }, [idFester, revision])
+
+  useEffect(() => {
+    const actualizar = () => { setSeleccionadas({}); setRevision((v) => v + 1) }
+    window.addEventListener('cuotas-actualizadas', actualizar)
+    return () => window.removeEventListener('cuotas-actualizadas', actualizar)
+  }, [])
 
   function identidadCuota(idCuota) {
     return `${idFester}-${idCuota}`
