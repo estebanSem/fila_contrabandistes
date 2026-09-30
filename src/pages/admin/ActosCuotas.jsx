@@ -27,8 +27,8 @@ export default function ActosTarifas() {
     setLoading(true)
     setError(null)
     const [actosRes, cuotasRes] = await Promise.all([
-      supabase.from('acto').select('*').order('nombre'),
-      supabase.from('cuota').select('*, acto(nombre)').order('id_cuota'),
+      supabase.from('acto').select('*').eq('activo', true).order('nombre'),
+      supabase.from('cuota').select('*, acto(nombre)').eq('activo', true).order('id_cuota'),
     ])
     if (actosRes.error || cuotasRes.error) {
       setError((actosRes.error || cuotasRes.error).message)
@@ -63,8 +63,8 @@ export default function ActosTarifas() {
   }
 
   async function borrarActo(id) {
-    if (!confirm('¿Borrar este acto? También se borrarán todas sus cuotas.')) return
-    const { error } = await supabase.from('acto').delete().eq('id_acto', id)
+    if (!confirm('¿Archivar este acto y sus tarifas? Los pagos anteriores se conservarán.')) return
+    const { error } = await supabase.rpc('archivar_acto', { p_id_acto: id })
     if (error) return setError(error.message)
     cargarTodo()
   }
@@ -120,8 +120,8 @@ export default function ActosTarifas() {
   }
 
   async function borrarCuota(id) {
-    if (!confirm('¿Borrar esta cuota?')) return
-    const { error } = await supabase.from('cuota').delete().eq('id_cuota', id)
+    if (!confirm('¿Archivar esta tarifa? Los pagos anteriores se conservarán.')) return
+    const { error } = await supabase.rpc('archivar_cuota', { p_id_cuota: id })
     if (error) return setError(error.message)
     cargarTodo()
   }
@@ -171,7 +171,7 @@ export default function ActosTarifas() {
                     Editar
                   </button>
                   <button type="button" className="btn-mini btn-mini-danger" onClick={() => borrarActo(a.id_acto)}>
-                    Borrar
+                    Archivar
                   </button>
                 </div>
               </>
@@ -243,7 +243,7 @@ export default function ActosTarifas() {
                       className="btn-mini btn-mini-danger"
                       onClick={() => borrarCuota(t.id_cuota)}
                     >
-                      Borrar
+                        Archivar
                     </button>
                   </div>
                 </td>

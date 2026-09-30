@@ -21,7 +21,8 @@ export default function CarritoResumen({ idFesterResponsable }) {
       })
 
       if (error) throw error
-      const fila = data[0]
+      const fila = data?.[0]
+      if (!fila) throw new Error('No se recibió la orden de pago.')
 
       const epcText = [
         'BCD',
@@ -37,7 +38,9 @@ export default function CarritoResumen({ idFesterResponsable }) {
         '',
       ].join('\n')
 
-      const qrDataUrl = await QRCode.toDataURL(epcText, { width: 260, margin: 2 })
+      let qrDataUrl = null
+      try { qrDataUrl = await QRCode.toDataURL(epcText, { width: 260, margin: 2 }) }
+      catch { /* El pago ya existe: se muestran igualmente los datos de transferencia. */ }
 
       setPago({
         idPago: fila.id_pago,
@@ -47,6 +50,7 @@ export default function CarritoResumen({ idFesterResponsable }) {
         qrDataUrl,
       })
       vaciarCarrito()
+      window.dispatchEvent(new Event('cuotas-actualizadas'))
     } catch (err) {
       setError('Error al generar el pago: ' + err.message)
     } finally {
@@ -54,9 +58,12 @@ export default function CarritoResumen({ idFesterResponsable }) {
     }
   }
 
-  function copiar(texto) {
-    navigator.clipboard.writeText(texto)
-    alert('Copiado: ' + texto)
+  async function copiar(texto) {
+    try {
+      await navigator.clipboard.writeText(texto)
+    } catch {
+      setError('No se pudo copiar. Selecciona el texto manualmente.')
+    }
   }
 
   // Pantalla de pago generado (QR)
@@ -86,8 +93,10 @@ export default function CarritoResumen({ idFesterResponsable }) {
           </button>
         </div>
 
-        <p>Escanea este código con la app de tu banco (opción "Pagar/Transferir por QR"):</p>
-        <img src={pago.qrDataUrl} width="240" height="240" alt="QR de pago" />
+        <p>Orden pendiente de transferencia. La tesorería confirmará el pago al recibirlo.</p>
+        {pago.qrDataUrl && <p>Escanea este código con la app de tu banco (opción "Pagar/Transferir por QR"):</p>}
+        {error && <p className="error-texto">{error}</p>}
+        {pago.qrDataUrl && <img src={pago.qrDataUrl} width="240" height="240" alt="QR de pago" />}
         <p className="aviso">
           Si tu banco no admite pago por QR, usa el IBAN y el concepto de arriba para transferir
           manualmente. Es imprescindible mantener el concepto exacto.

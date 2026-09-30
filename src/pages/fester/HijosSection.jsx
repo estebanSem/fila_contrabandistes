@@ -37,6 +37,7 @@ export default function HijosSection({ responsable }) {
       .from('fester')
       .select('*')
       .eq('id_fester_responsable', responsable.id_fester)
+      .eq('activo', true)
       .order('fecha_nac')
     if (error) setError(error.message)
     else setHijos(data)
@@ -76,8 +77,8 @@ export default function HijosSection({ responsable }) {
   }
 
   async function borrar(id) {
-    if (!confirm('¿Borrar este hijo/a? También se borrarán sus pagos.')) return
-    const { error } = await supabase.from('fester').delete().eq('id_fester', id)
+    if (!confirm('¿Archivar este hijo/a? Su historial de pagos se conservará.')) return
+    const { error } = await supabase.rpc('archivar_festero', { p_id_fester: id })
     if (error) return setError(error.message)
     if (hijoConCuotasId === id) setHijoConCuotasId(null)
     cargarHijos()
@@ -163,16 +164,7 @@ export default function HijosSection({ responsable }) {
             </div>
           </div>
 
-          <div className="campo campo-checkbox">
-            <label>
-              <input
-                type="checkbox"
-                checked={form.es_socio}
-                onChange={(e) => setForm({ ...form, es_socio: e.target.checked })}
-              />
-              Es socio
-            </label>
-          </div>
+          <p className="texto-muted">Condición de socio: {form.es_socio ? 'Sí' : 'No'}. Solicita cualquier cambio a la tesorería.</p>
 
           <p className="texto-muted" style={{ marginTop: -8, marginBottom: 16 }}>
             Teléfono y email son opcionales — al ser campos únicos, no pueden repetir los tuyos.
@@ -219,7 +211,7 @@ export default function HijosSection({ responsable }) {
                 Editar
               </button>
               <button type="button" className="btn-mini btn-mini-danger" onClick={() => borrar(h.id_fester)}>
-                Borrar
+                Archivar
               </button>
             </div>
           </div>

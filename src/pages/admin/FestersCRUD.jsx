@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../../supabaseClient.js'
 import FesterDetalleModal from './FesterDetalleModal.jsx'
 
@@ -20,19 +20,31 @@ export default function FestersCRUD() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [busqueda, setBusqueda] = useState('')
+  const [pagina, setPagina] = useState(0)
+  const [hayMas, setHayMas] = useState(false)
   const [form, setForm] = useState(null)
   const [festerAbiertoId, setFesterAbiertoId] = useState(null)
+  const peticionActual = useRef(0)
 
   useEffect(() => {
-    cargar()
-  }, [])
+    const timer = setTimeout(() => cargar(), 250)
+    return () => clearTimeout(timer)
+  }, [busqueda, pagina])
 
   async function cargar() {
+    const peticion = ++peticionActual.current
     setLoading(true)
     setError(null)
-    const { data, error } = await supabase.from('fester').select('*').order('nombre')
+    const filtro = busqueda.trim().replace(/[,%()]/g, '')
+    let consulta = supabase.from('fester').select('*').eq('activo', true).order('nombre')
+    if (filtro) consulta = consulta.or(`nombre.ilike.%${filtro}%,primer_apellido.ilike.%${filtro}%,dni.ilike.%${filtro}%,email.ilike.%${filtro}%`)
+    const { data, error } = await consulta.range(pagina * 25, pagina * 25 + 25)
+    if (peticion !== peticionActual.current) return
     if (error) setError(error.message)
-    else setFesters(data || [])
+    else {
+      setFesters((data || []).slice(0, 25))
+      setHayMas((data || []).length > 25)
+    }
     setLoading(false)
   }
 
@@ -72,23 +84,11 @@ export default function FestersCRUD() {
   }
 
   async function borrar(id) {
-    if (!confirm('¿Borrar este festero? También se borrarán sus pagos.')) return
-    const { error } = await supabase.from('fester').delete().eq('id_fester', id)
+    if (!confirm('¿Archivar este festero? Su historial de pagos se conservará.')) return
+    const { error } = await supabase.rpc('archivar_festero', { p_id_fester: id })
     if (error) return setError(error.message)
     cargar()
   }
-
-  const filtrados = festers.filter((f) => {
-    const texto = busqueda.toLowerCase()
-    return (
-      (f.nombre || '').toLowerCase().includes(texto) ||
-      (f.primer_apellido || '').toLowerCase().includes(texto) ||
-      (f.dni || '').toLowerCase().includes(texto) ||
-      (f.email || '').toLowerCase().includes(texto)
-    )
-  })
-
-  if (loading) return <p className="texto-muted">Cargando…</p>
 
   if (form) {
     return (
@@ -217,13 +217,14 @@ export default function FestersCRUD() {
 
   return (
     <div>
+      {loading && <p className="texto-muted">Cargando…</p>}
       {error && <p className="error-texto">{error}</p>}
 
       <div className="admin-toolbar">
         <input
           placeholder="Buscar por nombre, DNI o email…"
           value={busqueda}
-          onChange={(e) => setBusqueda(e.target.value)}
+          onChange={(e) => { setBusqueda(e.target.value); setPagina(0) }}
         />
         <button type="button" className="btn-mini" onClick={empezarCrear}>
           + Nuevo festero
@@ -243,7 +244,7 @@ export default function FestersCRUD() {
             </tr>
           </thead>
           <tbody>
-            {filtrados.map((f) => (
+            {festers.map((f) => (
               <tr key={f.id_fester}>
                 <td>
                   <a
@@ -275,7 +276,7 @@ export default function FestersCRUD() {
                       className="btn-mini btn-mini-danger"
                       onClick={() => borrar(f.id_fester)}
                     >
-                      Borrar
+                      Archivar
                     </button>
                   </div>
                 </td>
@@ -283,11 +284,17 @@ export default function FestersCRUD() {
             ))}
           </tbody>
         </table>
-        {filtrados.length === 0 && (
+        {festers.length === 0 && (
           <p className="texto-muted" style={{ padding: 12 }}>
             No hay festeros que coincidan.
           </p>
         )}
+      </div>
+
+      <div className="paginacion">
+        <button type="button" className="btn-mini" disabled={pagina === 0} onClick={() => setPagina(pagina - 1)}>Anterior</button>
+        <span>Página {pagina + 1}</span>
+        <button type="button" className="btn-mini" disabled={!hayMas} onClick={() => setPagina(pagina + 1)}>Siguiente</button>
       </div>
 
       {festerAbiertoId && (

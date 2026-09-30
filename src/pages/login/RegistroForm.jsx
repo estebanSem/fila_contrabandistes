@@ -55,55 +55,41 @@ export default function RegistroForm({ onIrALogin }) {
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email: form.email.trim(),
       password: form.password,
+      options: {
+        data: {
+          dni: form.dni.trim(), nombre: form.nombre.trim(),
+          primer_apellido: form.primerApellido.trim(), segundo_apellido: form.segundoApellido.trim(),
+          fecha_nac: form.fechaNacimiento, sexo: form.genero, telefono: form.telefono.trim(),
+        },
+      },
     })
 
-    if (authError) {
+    if (authError || !authData.user) {
       setEnviando(false)
-      setError(authError.message === 'User already registered'
-        ? 'Ya existe una cuenta con ese email'
-        : authError.message)
+      setError(authError?.message || 'No se pudo crear la cuenta.')
       return
     }
-
-    const authId = authData.user?.id
-    if (!authId) {
-      setEnviando(false)
-      setError('No se pudo crear la cuenta. Inténtalo de nuevo.')
-      return
+    // La ficha se completa con una RPC autenticada al tener sesión. Si se
+    // requiere confirmar email, el Dashboard la recupera al primer acceso.
+    if (authData.session) {
+      const { error: completarError } = await supabase.rpc('completar_registro', {
+        p_dni: form.dni.trim(), p_nombre: form.nombre.trim(),
+        p_primer_apellido: form.primerApellido.trim(), p_segundo_apellido: form.segundoApellido.trim(),
+        p_fecha_nac: form.fechaNacimiento, p_sexo: form.genero, p_telefono: form.telefono.trim(),
+      })
+      if (completarError) {
+        setEnviando(false)
+        setError('Cuenta creada, pero falta completar la ficha. Entra de nuevo para reintentarlo: ' + completarError.message)
+        return
+      }
     }
-
-    // 2. Crear la ficha de festero, vinculada a esa cuenta (registrar_festero
-    //    recalcula/valida todo dentro de la base de datos, ver schema.sql)
-    const { data: resultado, error: rpcError } = await supabase.rpc('registrar_festero', {
-      p_authid: authId,
-      p_dni: form.dni.trim(),
-      p_nombre: form.nombre.trim(),
-      p_primer_apellido: form.primerApellido.trim(),
-      p_segundo_apellido: form.segundoApellido.trim(),
-      p_fecha_nacimiento: form.fechaNacimiento,
-      p_genero: form.genero,
-      p_email: form.email.trim(),
-      p_telefono: form.telefono.trim(),
-    })
-
     setEnviando(false)
 
-    if (rpcError) {
-      setError('Error al guardar tus datos: ' + rpcError.message)
-      return
-    }
-
-    if (resultado === -2) {
-      setError('Ese DNI o email ya está registrado.')
-      return
-    }
-    if (resultado === 0) {
-      setError('Ocurrió un error inesperado al guardar tus datos. Inténtalo de nuevo.')
-      return
-    }
-
-    // resultado === -1 -> éxito
     setForm(initialForm)
+    if (authData.session) {
+      window.location.assign('/')
+      return
+    }
     setExito(
       authData.session
         ? '¡Cuenta creada correctamente!'
