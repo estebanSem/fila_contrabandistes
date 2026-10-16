@@ -35,6 +35,10 @@ SUPABASE_INTERNAL_IMAGE_REGISTRY=docker.io /workspace/.tools/supabase-2.75.0/sup
 
 El helper verifica el checksum oficial de crane, fija la imagen de origen por digest y conserva su contenido/configuración de arranque. La imagen local cambia de manifiesto; no se publica ni modifica el registro oficial. En Docker con `overlay2` no hace esta transformación. Este ajuste es exclusivo del desarrollo local, no del despliegue en Supabase.
 
+## Error al inicializar Realtime
+
+La fase 1 no utiliza Realtime ni Storage; ambos están desactivados en `supabase/config.toml`. En el CLI 2.75.0, excluir servicios con `-x` no evita sus migraciones iniciales si `enabled` sigue siendo `true`. Si aparece un error `DBConnection.ConnectionError` durante `/app/bin/migrate` de Realtime, actualizar esta rama con `git pull --ff-only` y volver a ejecutar el arranque documentado. No es necesario borrar volúmenes ni ejecutar `db reset` para aplicar este ajuste.
+
 ## Comprobaciones
 
 ```bash
