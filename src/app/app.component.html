@@ -1,0 +1,32 @@
+<a class="skip-link" href="#content">Saltar al contenido</a>
+@if (auth.session() && !auth.recovery()) {
+  <header class="app-bar">
+    <a class="brand" routerLink="/">F<span>·</span> FILÀ <small>ESPAI DE GESTIÓ</small></a
+    ><label class="tenant-label"
+      >Filà<select [value]="auth.tenantId()" (change)="tenant($event)">
+        @for (f of auth.filadas(); track f.id) {
+          <option [value]="f.id">{{ f.nombre }}</option>
+        }
+      </select></label
+    ><button (click)="logout()">Cerrar sesión</button>
+  </header>
+  <nav aria-label="Principal">
+    <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }"
+      >Inicio</a
+    ><a routerLink="/festeros" routerLinkActive="active">{{
+      auth.canManage() ? 'Festeros' : 'Mis datos'
+    }}</a
+    ><a routerLink="/familias" routerLinkActive="active">Familias</a>
+    @if (auth.isAdmin()) {
+      <a routerLink="/administracion" routerLinkActive="active">Administración</a>
+    }
+  </nav>
+}
+@if (error()) {
+  <p role="alert" class="error">{{ error() }}</p>
+}
+@if (auth.backend.initializationError()) {
+  <p class="error" role="alert">{{ auth.backend.initializationError() }}</p>
+}
+<main id="content" tabindex="-1" class="container"><router-outlet /></main>
+<footer>FILÀ · Personas y tradición</footer>

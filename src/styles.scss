@@ -1,0 +1,370 @@
+@use 'sass:color';
+:root {
+  font-family: Inter, system-ui, sans-serif;
+  color: #1f3034;
+  background: #f5f4f0;
+  font-size: 16px;
+  line-height: 1.55;
+  color-scheme: light;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+}
+h1,
+h2,
+h3 {
+  line-height: 1.2;
+  letter-spacing: -0.025em;
+}
+h1 {
+  font-size: clamp(2rem, 5vw, 3rem);
+  font-weight: 650;
+  margin: 0.5rem 0 1rem;
+}
+h2 {
+  font-size: 1.3rem;
+}
+a {
+  color: #145d58;
+  text-underline-offset: 3px;
+}
+button,
+.button {
+  font: inherit;
+  display: inline-block;
+  border: 1px solid #647976;
+  background: white;
+  border-radius: 7px;
+  padding: 0.65rem 1rem;
+  cursor: pointer;
+  text-decoration: none;
+  color: #214d49;
+  min-height: 44px;
+}
+button:hover,
+.button:hover {
+  background: #e5eeeb;
+}
+button:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+.primary {
+  background: #185f56;
+  color: white;
+  border-color: #185f56;
+}
+.primary:hover {
+  background: #10483f;
+  color: white;
+}
+.danger {
+  color: #952326;
+  border-color: #952326;
+}
+:focus-visible {
+  outline: 3px solid #ac6600;
+  outline-offset: 3px;
+}
+input,
+select {
+  display: block;
+  width: 100%;
+  font: inherit;
+  color: #1f3034;
+  background: white;
+  border: 1px solid #7e8d8a;
+  border-radius: 6px;
+  padding: 0.65rem;
+  min-height: 44px;
+}
+label {
+  display: block;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+label small {
+  font-weight: 400;
+}
+input.ng-invalid.ng-touched {
+  border-color: #a0242c;
+}
+fieldset {
+  border: 0;
+  padding: 0;
+  margin: 0;
+}
+legend {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+}
+form button {
+  margin-top: 1.5rem;
+}
+small {
+  display: block;
+  color: #52645f;
+  font-size: 0.82rem;
+}
+.app-bar {
+  background: #fff;
+  border-bottom: 1px solid #e2e5df;
+  display: flex;
+  gap: 1.5rem;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem max(1rem, calc((100vw - 1180px) / 2));
+}
+.brand {
+  font-size: 1.35rem;
+  text-decoration: none;
+  font-weight: 750;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+}
+.brand span {
+  color: #ad6d30;
+}
+.brand small {
+  font-size: 0.6rem;
+  letter-spacing: 0.18em;
+}
+.tenant-label {
+  max-width: 280px;
+  flex: 1;
+}
+nav {
+  display: flex;
+  gap: 1.5rem;
+  overflow: auto;
+  padding: 0.5rem max(1rem, calc((100vw - 1180px) / 2));
+  background: white;
+}
+nav a {
+  padding: 0.65rem 0.25rem;
+  white-space: nowrap;
+  text-decoration: none;
+  color: #4b5f5b;
+  border-bottom: 3px solid transparent;
+}
+nav a.active {
+  color: #165b52;
+  border-color: #165b52;
+  font-weight: 650;
+}
+.container {
+  max-width: 1180px;
+  padding: 2rem 1rem 4rem;
+  margin: auto;
+  min-height: 75vh;
+}
+.page-header {
+  margin: 1rem 0 2rem;
+  max-width: 850px;
+}
+.page-header p {
+  color: #52645f;
+}
+.eyebrow {
+  font-size: 0.7rem !important;
+  font-weight: 750;
+  letter-spacing: 0.15em;
+  color: #775126 !important;
+}
+.panel {
+  border: 1px solid #dce0d9;
+  background: #fff;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+.cards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.5rem;
+}
+.feature-card {
+  padding: 2rem;
+  text-decoration: none;
+  color: inherit;
+  box-shadow: 0 5px 15px #233d3506;
+}
+.feature-card > span:last-child {
+  color: #185f56;
+  font-weight: 650;
+}
+.feature-card:hover {
+  border-color: #185f56;
+}
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.25rem;
+}
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+.filters > label:first-child {
+  flex: 1;
+  min-width: 180px;
+}
+.table-scroll {
+  overflow-x: auto;
+}
+table {
+  border-collapse: collapse;
+  width: 100%;
+  text-align: left;
+  font-size: 0.9rem;
+}
+caption {
+  text-align: left;
+  color: #52645f;
+  padding: 0.5rem 0;
+}
+th {
+  background: #f2f5f2;
+  color: #4b605a;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+td,
+th {
+  padding: 1rem;
+  border-bottom: 1px solid #e3e7e2;
+}
+td button {
+  font-size: 0.8rem;
+}
+.badge {
+  display: inline-block;
+  background: #e1f1e7;
+  color: #215634;
+  padding: 0.25rem 0.65rem;
+  font-size: 0.7rem;
+  letter-spacing: 0.04em;
+  border-radius: 30px;
+}
+.badge.inactive {
+  background: #eeeae6;
+  color: #67503b;
+}
+.error {
+  background: #fff0ef;
+  color: #952326;
+  border-left: 4px solid #a52b30;
+  padding: 1rem;
+}
+.empty {
+  padding: 2rem;
+  text-align: center;
+  color: #52645f;
+}
+.auth-card {
+  max-width: 480px;
+  margin: 3rem auto;
+  padding: 2rem;
+  background: white;
+  border: 1px solid #dce0d9;
+  border-radius: 12px;
+}
+.auth-card label {
+  margin-top: 1rem;
+}
+.auth-card .primary {
+  width: 100%;
+}
+.text-button {
+  border: 0;
+  margin-top: 1rem;
+}
+.check {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+.check input {
+  width: 22px;
+  height: 22px;
+  min-height: 22px;
+}
+footer {
+  text-align: center;
+  font-size: 0.75rem;
+  padding: 1.5rem;
+  color: #52645f;
+  letter-spacing: 0.1em;
+}
+.skip-link {
+  position: fixed;
+  top: -100px;
+  left: 1rem;
+  z-index: 99;
+  background: white;
+  padding: 1rem;
+}
+.skip-link:focus {
+  top: 1rem;
+}
+dialog {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  max-width: 420px;
+  width: calc(100% - 2rem);
+  border: 1px solid #6a8077;
+  border-radius: 12px;
+  padding: 2rem;
+}
+dialog::backdrop {
+  background: #152f2970;
+}
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+}
+@media (max-width: 640px) {
+  .app-bar {
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+  .brand {
+    flex: 1;
+  }
+  .tenant-label {
+    order: 3;
+    max-width: none;
+    flex-basis: 100%;
+  }
+  .cards,
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+  .panel {
+    padding: 1rem;
+  }
+  .container {
+    padding-top: 1rem;
+  }
+  .auth-card {
+    padding: 1.25rem;
+    margin: 1rem auto;
+  }
+  td,
+  th {
+    padding: 0.75rem;
+  }
+  .filters > label {
+    flex: 1;
+    min-width: 130px;
+  }
+}
